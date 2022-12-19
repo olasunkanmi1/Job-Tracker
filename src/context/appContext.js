@@ -45,7 +45,7 @@ const AppProvider = ({ children }) => {
             const { data } = await axios.post(`http://localhost:5000/api/v1/auth/${endPoint}`, currentUser)
 
             const {user, token, location} = data
-            dispatch({type: SETUP_USER_SUCCESS, payload: { user, token, location, alertText }})
+            dispatch({type: SETUP_USER_SUCCESS, payload: { user, token, location, alertText }}) 
 
             addUserToLocalStorage({user, token, location})
         } catch (error) {
