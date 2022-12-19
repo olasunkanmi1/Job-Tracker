@@ -14,7 +14,7 @@ const initialState = {
 const Register = () => {
   const navigate = useNavigate();
   const [values, setValues] = useState(initialState);
-  const { isLoading, showAlert, displayAlert, clearAlert, registerUser, user } = useAppContext();
+  const { isLoading, showAlert, displayAlert, clearAlert, user, setupUser } = useAppContext();
 
   const toggleMember = () => {
     setValues({ ...values, isMember: !values.isMember });
@@ -34,18 +34,17 @@ const Register = () => {
     }
     const currentUser = { name, email, password };
     if (isMember) {
-      // setupUser({
-      //   currentUser,
-      //   endPoint: 'login',
-      //   alertText: 'Login Successful! Redirecting...',
-      // });
+      setupUser({
+        currentUser,
+        endPoint: 'login',
+        alertText: 'Login Successful! Redirecting...',
+      });
     } else {
-      // setupUser({
-      //   currentUser,
-      //   endPoint: 'register',
-      //   alertText: 'User Created! Redirecting...',
-      // });
-      registerUser(currentUser)
+      setupUser({
+        currentUser,
+        endPoint: 'register',
+        alertText: 'User Created! Redirecting...',
+      });
     }
   };
 
@@ -105,7 +104,7 @@ const Register = () => {
             // });
           }}
         >
-          {/* {isLoading ? 'loading...' : 'demo app'} */} okkk
+          {/* {isLoading ? 'loading...' : 'demo app'} */}
         </button>
         <p>
           {values.isMember ? 'Not a member yet?' : 'Already a member?'}
