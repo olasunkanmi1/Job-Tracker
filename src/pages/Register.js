@@ -14,7 +14,7 @@ const initialState = {
 const Register = () => {
   const navigate = useNavigate();
   const [values, setValues] = useState(initialState);
-  const { isLoading, showAlert, displayAlert, clearAlert } = useAppContext();
+  const { isLoading, showAlert, displayAlert, clearAlert, user, setupUser } = useAppContext();
 
   const toggleMember = () => {
     setValues({ ...values, isMember: !values.isMember });
@@ -24,6 +24,7 @@ const Register = () => {
     setValues({ ...values, [e.target.name]: e.target.value });
     clearAlert();
   };
+
   const onSubmit = (e) => {
     e.preventDefault();
     const { name, email, password, isMember } = values;
@@ -32,28 +33,29 @@ const Register = () => {
       return;
     }
     const currentUser = { name, email, password };
-    // if (isMember) {
-    //   setupUser({
-    //     currentUser,
-    //     endPoint: 'login',
-    //     alertText: 'Login Successful! Redirecting...',
-    //   });
-    // } else {
-    //   setupUser({
-    //     currentUser,
-    //     endPoint: 'register',
-    //     alertText: 'User Created! Redirecting...',
-    //   });
-    // }
+    if (isMember) {
+      setupUser({
+        currentUser,
+        endPoint: 'login',
+        alertText: 'Login Successful! Redirecting...',
+      });
+    } else {
+      setupUser({
+        currentUser,
+        endPoint: 'register',
+        alertText: 'User Created! Redirecting...',
+      });
+    }
   };
 
-  // useEffect(() => {
-  //   if (user) {
-  //     setTimeout(() => {
-  //       navigate('/');
-  //     }, 3000);
-  //   }
-  // }, [user, navigate]);
+  useEffect(() => {
+    if (user) {
+      // timeout optional. just to allow the alert show for a bit
+      setTimeout(() => {
+        navigate('/');
+      }, 3000);
+    }
+  }, [user, navigate]);
 
   return (
     <Wrapper className='full-page'>
@@ -102,7 +104,7 @@ const Register = () => {
             // });
           }}
         >
-          {/* {isLoading ? 'loading...' : 'demo app'} */} okkk
+          {/* {isLoading ? 'loading...' : 'demo app'} */}
         </button>
         <p>
           {values.isMember ? 'Not a member yet?' : 'Already a member?'}
