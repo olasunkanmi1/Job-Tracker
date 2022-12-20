@@ -1,4 +1,5 @@
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER } from "./action";
+import { initialState } from './appContext';
 
 const reducer = (state, action) => {
     // alerts
@@ -52,6 +53,24 @@ const reducer = (state, action) => {
         }
     }
 
+    // toggle sidebar
+    if(action.type === TOGGLE_SIDEBAR){
+        return{
+            ...state, 
+            showSidebar: !state.showSidebar
+        }
+    }
+    
+    // logout user
+    if (action.type === LOGOUT_USER) {
+        return {
+          ...initialState,
+          user: null,
+          token: null,
+          userLocation: '',
+          jobLocation: '',
+        };
+      }
 
 
     throw new Error(`no such action : ${action.type}`)

@@ -1,11 +1,11 @@
 import Landing from './landing'
 import Error from './Error'
 import Register from './Register'
-import Dashboard from './dashboard'
+import ProtectedRoute from './ProtectedRoute'
 
 export {
   Landing,
   Error,
   Register, 
-  Dashboard
+  ProtectedRoute
 }
