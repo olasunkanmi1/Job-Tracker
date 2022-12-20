@@ -1,6 +1,6 @@
 import React, { useReducer, useContext } from 'react'
 import reducer from './reducer';
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS } from "./action";
 import axios from 'axios'
 
 const token = localStorage.getItem('token');
@@ -23,6 +23,7 @@ const AppContext = React.createContext();
 const AppProvider = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
+    // localStorage 
     const addUserToLocalStorage = ({ user, token, location }) => {
         localStorage.setItem('user', JSON.stringify(user))
         localStorage.setItem('token', token)
@@ -35,6 +36,36 @@ const AppProvider = ({ children }) => {
         localStorage.setItem('location')
     }
 
+    // AXIOS
+    const authFetch = axios.create({
+        baseURL: 'http://localhost:5000/api/v1',
+    });
+
+    // --request interceptor
+    authFetch.interceptors.request.use(
+        (config) => {
+            config.headers['Authorization'] = `Bearer ${state.token}`;
+            return config;
+        },
+        (error) => {
+            return Promise.reject(error);
+        }
+    );
+
+    // --response interceptor
+    authFetch.interceptors.response.use(
+        (response) => {
+            return response;
+        },
+        (error) => {
+            // console.log(error.response);
+            if (error.response.status === 401) {
+                logoutUser()
+            }
+            return Promise.reject(error);
+        }
+    );
+
     // alerts
     const displayAlert = () => dispatch({ type: DISPLAY_ALERT });
     const clearAlert = () => dispatch({ type: CLEAR_ALERT })
@@ -43,7 +74,7 @@ const AppProvider = ({ children }) => {
     const setupUser = async ({currentUser, endPoint, alertText}) => {
         dispatch({ type: SETUP_USER_BEGIN })
         try {
-            const { data } = await axios.post(`http://localhost:5000/api/v1/auth/${endPoint}`, currentUser)
+            const { data } = await authFetch.post(`/auth/${endPoint}`, currentUser)
 
             const {user, token, location} = data
             dispatch({type: SETUP_USER_SUCCESS, payload: { user, token, location, alertText }}) 
@@ -67,11 +98,41 @@ const AppProvider = ({ children }) => {
         dispatch({ type: LOGOUT_USER })
         removeUserFromLocalStorage()
     }
+    
+    // update user
+    const updateUser = async (currentUser) => {
+        dispatch({ type: UPDATE_USER_BEGIN })
+
+        try {
+            const { data } = await authFetch.patch('/auth/updateUser', currentUser);
+            const { user, location, token } = data;
+
+            dispatch({
+                type: UPDATE_USER_SUCCESS,
+                payload: { user, location, token },
+            });
+        
+            addUserToLocalStorage({ user, location, token });
+          } catch (error) {
+            if(error.response.status  !== 401) {
+                dispatch({
+                    type: UPDATE_USER_ERROR,
+                    payload: { msg: error.response.data.msg },
+                });
+            }
+          }
+
+          setTimeout(() => {
+            clearAlert()
+            
+          }, 3000);
+
+    }
 
 
     return (
         <AppContext.Provider
-            value={{ ...state, displayAlert, clearAlert, setupUser, toggleSidebar, logoutUser }}
+            value={{ ...state, displayAlert, clearAlert, setupUser, toggleSidebar, logoutUser, updateUser }}
         >
             {children}
         </AppContext.Provider>
