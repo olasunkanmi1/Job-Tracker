@@ -1,4 +1,4 @@
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS } from "./action";
 import { initialState } from './appContext';
 
 const reducer = (state, action) => {
@@ -90,15 +90,78 @@ const reducer = (state, action) => {
             alertText: 'User Profile Updated!',
         }
     }
-    
+
     if (action.type === UPDATE_USER_ERROR) {
-    return {
+        return {
             ...state,
             isLoading: false,
             showAlert: true,
             alertType: 'danger',
             alertText: action.payload.msg,
         }
+    }
+    
+    // handle change for add and edit job
+    if (action.type === HANDLE_CHANGE) {
+        return { ...state, [action.payload.name]: action.payload.value };
+    }
+    
+    // clear values
+    if (action.type === CLEAR_VALUES) {
+        const initialState = {
+            isEditing: false,
+            editJobId: '',
+            position: '',
+            company: '',
+            jobLocation: state.userLocation,
+            jobType: 'full-time',
+            status: 'pending',
+            jobs: [],
+            totalJobs: 0,
+            numOfPages: 1,
+            page: 1,
+        };
+        return { ...state, ...initialState };
+    }
+
+    // create job
+    if (action.type === CREATE_JOB_BEGIN) {
+        return { ...state, isLoading: true };
+    }
+
+    if (action.type === CREATE_JOB_SUCCESS) {
+        return {
+            ...state,
+            isLoading: false,
+            showAlert: true,
+            alertType: 'success',
+            alertText: 'New Job Created!',
+        };
+    }
+
+    if (action.type === CREATE_JOB_ERROR) {
+        return {
+            ...state,
+            isLoading: false,
+            showAlert: true,
+            alertType: 'danger',
+            alertText: action.payload.msg,
+        };
+    }
+
+    // get all jobs
+    if (action.type === GET_JOBS_BEGIN) {
+        return { ...state, isLoading: true, showAlert: false };
+    }
+
+    if (action.type === GET_JOBS_SUCCESS) {
+        return {
+            ...state,
+            isLoading: false,
+            jobs: action.payload.jobs,
+            totalJobs: action.payload.totalJobs,
+            numOfPages: action.payload.numOfPages,
+        };
     }
 
     throw new Error(`no such action : ${action.type}`)
