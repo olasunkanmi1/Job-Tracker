@@ -21,6 +21,6 @@ const FormRowSelect = ({ labelText, name, value, handleChange, list }) => {
         </select>
       </div>
     );
-};
+  };
   
-export default FormRowSelect;
+  export default FormRowSelect;

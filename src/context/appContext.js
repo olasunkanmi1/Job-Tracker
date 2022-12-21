@@ -1,6 +1,6 @@
 import React, { useReducer, useContext } from 'react'
 import reducer from './reducer';
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_SUCCESS, EDIT_JOB_ERROR } from "./action";
 import axios from 'axios'
 
 const token = localStorage.getItem('token');
@@ -211,16 +211,49 @@ const AppProvider = ({ children }) => {
 
     // edit and delete job
     const setEditJob = (id) => {
-        console.log(`set edit job : ${id}`)
+        dispatch({ type: SET_EDIT_JOB, payload: { id } })
     }
-    const deleteJob = (id) =>{
-        console.log(`delete : ${id}`)
-    }
+
+    const editJob = async () => {
+        dispatch({ type: EDIT_JOB_BEGIN });
+        try {
+          const { position, company, jobLocation, jobType, status } = state;
+      
+          await authFetch.patch(`/jobs/${state.editJobId}`, {
+            company,
+            position,
+            jobLocation,
+            jobType,
+            status,
+          });
+          dispatch({
+            type: EDIT_JOB_SUCCESS,
+          });
+          dispatch({ type: CLEAR_VALUES });
+        } catch (error) {
+          if (error.response.status === 401) return;
+          dispatch({
+            type: EDIT_JOB_ERROR,
+            payload: { msg: error.response.data.msg },
+          });
+        }
+        clearAlert();
+    };
+
+    const deleteJob = async (jobId) => {
+        dispatch({ type: DELETE_JOB_BEGIN });
+        try {
+          await authFetch.delete(`/jobs/${jobId}`);
+          getJobs();
+        } catch (error) {
+        //   logoutUser();
+        }
+      };
 
 
     return (
         <AppContext.Provider
-            value={{ ...state, displayAlert, clearAlert, setupUser, toggleSidebar, logoutUser, updateUser, handleChange, clearValues, createJob, getJobs, setEditJob, deleteJob }}
+            value={{ ...state, displayAlert, clearAlert, setupUser, toggleSidebar, logoutUser, updateUser, handleChange, clearValues, createJob, getJobs, setEditJob, editJob, deleteJob }}
         >
             {children}
         </AppContext.Provider>
