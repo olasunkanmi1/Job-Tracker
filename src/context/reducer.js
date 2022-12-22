@@ -1,4 +1,4 @@
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_ERROR, EDIT_JOB_SUCCESS, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_ERROR, EDIT_JOB_SUCCESS, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS, CHANGE_PAGE } from "./action";
 import { initialState } from './appContext';
 
 const reducer = (state, action) => {
@@ -101,9 +101,13 @@ const reducer = (state, action) => {
         }
     }
     
-    // handle change for add and edit job
+    // handle change for add and edit job and search filter
     if (action.type === HANDLE_CHANGE) {
-        return { ...state, [action.payload.name]: action.payload.value };
+        return { 
+            ...state, 
+            page: 1,
+            [action.payload.name]: action.payload.value 
+        };
     }
     
     // clear values
@@ -233,6 +237,11 @@ const reducer = (state, action) => {
           sort: 'latest',
         };
       }
+
+    //   change page
+    if (action.type === CHANGE_PAGE) {
+        return { ...state, page: action.payload.page };
+    }
 
 
     throw new Error(`no such action : ${action.type}`)
