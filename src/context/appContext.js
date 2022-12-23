@@ -47,7 +47,7 @@ const AppProvider = ({ children }) => {
 
     // AXIOS
     const authFetch = axios.create({
-        baseURL: 'http://localhost:5000/api/v1',
+        baseURL: 'https://job-tracker-ru7r.onrender.com/api/v1',
     });
 
     // --request interceptor ---removed after setting token in cookie
