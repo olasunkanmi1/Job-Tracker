@@ -102,8 +102,9 @@ const AppProvider = ({ children }) => {
     }
     
     // logout user
-    const logoutUser = () => {
-        dispatch({ type: LOGOUT_USER })
+    const logoutUser = async () => {
+      await authFetch('/auth/logout');
+      dispatch({ type: LOGOUT_USER })
     }
     
     // update user
