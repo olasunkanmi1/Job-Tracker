@@ -1,24 +1,19 @@
-import React, { useReducer, useContext } from 'react'
+import React, { useReducer, useContext, useEffect } from 'react'
 import reducer from './reducer';
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_SUCCESS, EDIT_JOB_ERROR, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS, CHANGE_PAGE } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_SUCCESS, EDIT_JOB_ERROR, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS, CHANGE_PAGE, DELETE_JOB_ERROR, GET_CURRENT_USER_BEGIN, GET_CURRENT_USER_SUCCESS } from "./action";
 import axios from 'axios'
-
-const token = localStorage.getItem('token');
-const user = localStorage.getItem('user');
-const userLocation = localStorage.getItem('location');
 
 export const initialState = {
     isLoading: false,
     showAlert: false,
     alertText: '',
     alertType: '',
-    user: user ? JSON.parse(user) : null,
-    token: token,
-    userLocation: userLocation || '',
+    user: null,
+    userLocation: '',
     showSidebar: false,
     
     // job
-    jobLocation: userLocation || '',
+    jobLocation: '',
     isEditing: false,
     editJobId: '',
     position: '',
@@ -42,34 +37,23 @@ export const initialState = {
   searchType: 'all',
   sort: 'latest',
   sortOptions: ['latest', 'oldest', 'a-z', 'z-a'],
+
+  userLoading: true,
 };
 
 const AppContext = React.createContext();
 const AppProvider = ({ children }) => {
     const [state, dispatch] = useReducer(reducer, initialState);
 
-    // localStorage 
-    const addUserToLocalStorage = ({ user, token, location }) => {
-        localStorage.setItem('user', JSON.stringify(user))
-        localStorage.setItem('token', token)
-        localStorage.setItem('location', location)
-    }
-    
-    const removeUserFromLocalStorage = () => {
-        localStorage.removeItem('user')
-        localStorage.setItem('token')
-        localStorage.setItem('location')
-    }
-
     // AXIOS
     const authFetch = axios.create({
         baseURL: 'http://localhost:5000/api/v1',
     });
 
-    // --request interceptor
+    // --request interceptor ---removed after setting token in cookie
     authFetch.interceptors.request.use(
         (config) => {
-            config.headers['Authorization'] = `Bearer ${state.token}`;
+          config.withCredentials = true;
             return config;
         },
         (error) => {
@@ -101,10 +85,9 @@ const AppProvider = ({ children }) => {
         try {
             const { data } = await authFetch.post(`/auth/${endPoint}`, currentUser)
 
-            const {user, token, location} = data
-            dispatch({type: SETUP_USER_SUCCESS, payload: { user, token, location, alertText }}) 
+            const {user, location} = data
+            dispatch({type: SETUP_USER_SUCCESS, payload: { user, location, alertText }}) 
 
-            addUserToLocalStorage({user, token, location})
         } catch (error) {
 
             dispatch({type: SETUP_USER_ERROR, payload: { msg: error.response.data.msg }})
@@ -121,7 +104,6 @@ const AppProvider = ({ children }) => {
     // logout user
     const logoutUser = () => {
         dispatch({ type: LOGOUT_USER })
-        removeUserFromLocalStorage()
     }
     
     // update user
@@ -130,14 +112,13 @@ const AppProvider = ({ children }) => {
 
         try {
             const { data } = await authFetch.patch('/auth/updateUser', currentUser);
-            const { user, location, token } = data;
+            const { user, location } = data;
 
             dispatch({
                 type: UPDATE_USER_SUCCESS,
-                payload: { user, location, token },
+                payload: { user, location },
             });
         
-            addUserToLocalStorage({ user, location, token });
           } catch (error) {
             if(error.response.status  !== 401) {
                 dispatch({
@@ -264,8 +245,17 @@ const AppProvider = ({ children }) => {
           await authFetch.delete(`/jobs/${jobId}`);
           getJobs();
         } catch (error) {
-          logoutUser();
+          if (error.response.status === 401) return;
+          dispatch({
+            type: DELETE_JOB_ERROR,
+            payload: { msg: error.response.data.msg },
+          });
+          // logoutUser();
         }
+
+        setTimeout(() => {
+          clearAlert()
+      }, 3000);
     };
 
     // show stats
@@ -296,6 +286,27 @@ const AppProvider = ({ children }) => {
     const changePage = (page) => {
       dispatch({ type: CHANGE_PAGE, payload: { page } })
     }
+
+    // get current user
+    const getCurrentUser = async () => {
+      dispatch({ type: GET_CURRENT_USER_BEGIN });
+      try {
+        const { data } = await authFetch('/auth/getCurrentUser');
+        const { user, location } = data;
+    
+        dispatch({
+          type: GET_CURRENT_USER_SUCCESS,
+          payload: { user, location },
+        });
+      } catch (error) {
+        if (error.response.status === 401) return;
+        logoutUser();
+      }
+    };
+
+    useEffect(() => {
+      getCurrentUser();
+    }, []);
 
     return (
         <AppContext.Provider

@@ -1,7 +1,11 @@
+import { useState, useMemo } from 'react'
 import { FormRow, FormRowSelect } from '.';
 import { useAppContext } from '../context/appContext';
 import Wrapper from '../assets/wrappers/SearchContainer';
+
 const SearchContainer = () => {
+  const [localSearch, setLocalSearch] = useState('');
+
   const {
     isLoading,
     search,
@@ -22,8 +26,25 @@ const SearchContainer = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    setLocalSearch('')
     clearFilters();
   };
+
+    // search only after 1 seconds after last key stroke not every time user type
+  const debounce = () => {
+    let timeoutID;
+
+    return (e) => {
+      setLocalSearch(e.target.value);
+      clearTimeout(timeoutID);
+
+      timeoutID = setTimeout(() => {
+        handleChange({ name: e.target.name, value: e.target.value })
+      }, 1000)
+    }
+  }
+
+  const optimizedDebounce = useMemo(() => debounce(), [])
 
   return (
     <Wrapper>
@@ -34,8 +55,8 @@ const SearchContainer = () => {
           <FormRow
             type='text'
             name='search'
-            value={search}
-            handleChange={handleSearch}
+            value={localSearch}
+            handleChange={optimizedDebounce}
           ></FormRow>
           
           <FormRowSelect

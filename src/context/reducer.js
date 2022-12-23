@@ -1,4 +1,4 @@
-import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_ERROR, EDIT_JOB_SUCCESS, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS, CHANGE_PAGE } from "./action";
+import { DISPLAY_ALERT, CLEAR_ALERT, SETUP_USER_BEGIN, SETUP_USER_ERROR, SETUP_USER_SUCCESS, TOGGLE_SIDEBAR, LOGOUT_USER, UPDATE_USER_BEGIN, UPDATE_USER_ERROR, UPDATE_USER_SUCCESS, HANDLE_CHANGE, CLEAR_VALUES, CREATE_JOB_BEGIN, CREATE_JOB_SUCCESS, CREATE_JOB_ERROR, GET_JOBS_BEGIN, GET_JOBS_SUCCESS, SET_EDIT_JOB, DELETE_JOB_BEGIN, EDIT_JOB_BEGIN, EDIT_JOB_ERROR, EDIT_JOB_SUCCESS, SHOW_STATS_BEGIN, SHOW_STATS_SUCCESS, CLEAR_FILTERS, CHANGE_PAGE, DELETE_JOB_ERROR, GET_CURRENT_USER_BEGIN, GET_CURRENT_USER_SUCCESS } from "./action";
 import { initialState } from './appContext';
 
 const reducer = (state, action) => {
@@ -33,7 +33,6 @@ const reducer = (state, action) => {
         return{
             ...state, 
             isLoading: false,
-            token: action.payload.token,
             user: action.payload.user,
             userLocation: action.payload.location,
             jobLocation: action.payload.location,
@@ -64,11 +63,11 @@ const reducer = (state, action) => {
     // logout user
     if (action.type === LOGOUT_USER) {
         return {
-          ...initialState,
-          user: null,
-          token: null,
-          userLocation: '',
-          jobLocation: '',
+            ...initialState,
+            user: null,
+            userLocation: '',
+            jobLocation: '',
+            userLoading: false,
         };
     }
 
@@ -81,7 +80,6 @@ const reducer = (state, action) => {
         return {
             ...state,
             isLoading: false,
-            token:action.payload.token,
             user: action.payload.user,
             userLocation: action.payload.location,
             jobLocation: action.payload.location,
@@ -213,6 +211,16 @@ const reducer = (state, action) => {
         return { ...state, isLoading: true };
     }
 
+    if (action.type === DELETE_JOB_ERROR) {
+        return {
+            ...state,
+            isLoading: false,
+            showAlert: true,
+            alertType: 'danger',
+            alertText: action.payload.msg,
+        };
+    }
+
     // show stats
     if (action.type === SHOW_STATS_BEGIN) {
         return { ...state, isLoading: true, showAlert: false };
@@ -241,6 +249,21 @@ const reducer = (state, action) => {
     //   change page
     if (action.type === CHANGE_PAGE) {
         return { ...state, page: action.payload.page };
+    }
+
+    // get current user
+    if (action.type === GET_CURRENT_USER_BEGIN) {
+        return { ...state, userLoading: true, showAlert: false };
+    }
+
+    if (action.type === GET_CURRENT_USER_SUCCESS) {
+        return {
+          ...state,
+          userLoading: false,
+          user: action.payload.user,
+          userLocation: action.payload.location,
+          jobLocation: action.payload.location,
+        };
     }
 
 
